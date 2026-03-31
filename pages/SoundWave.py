@@ -1,49 +1,56 @@
 import streamlit as st
-import numpy as np
 import librosa
-import matplotlib.pyplot as plt
-from gtts import gTTS
+import librosa.display
 import soundfile as sf
-from audio_recorder_streamlit import audio_recorder
-import tempfile
+import matplotlib.pyplot as plt
+import numpy as np
 
-st.title("🔊 Pronunciation Practice – Soundwave")
+from utils.tts import generate_tts
 
-text = st.text_input("일본어 발음 연습 문장 입력", "こんにちは")
+st.header("🌊 SoundWaves")
 
-# ---------- TTS ----------
-if st.button("원어민 발음 생성 (TTS)"):
-    tts = gTTS(text=text, lang="ja")
-    tts_file = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
-    tts.save(tts_file.name)
-    st.audio(tts_file.name)
+# ---------- 입력 ----------
+text = st.text_input("일본어 문장을 입력하세요")
 
-    st.session_state["tts_path"] = tts_file.name
+if st.button("원어민 음성 생성"):
+    generate_tts(text, "native.wav")
+    st.audio("native.wav")
 
-# ---------- Recording ----------
-st.markdown("### 🎙️ 학습자 녹음")
-audio_bytes = audio_recorder(text="녹음 시작 / 중지")
+# ---------- 학습자 녹음 ----------
+audio = st.audio_input("같은 문장을 읽어보세요")
 
-if audio_bytes:
-    learner_file = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
-    with open(learner_file.name, "wb") as f:
-        f.write(audio_bytes)
+if audio:
+    with open("learner.wav", "wb") as f:
+        f.write(audio.getbuffer())
+    st.audio("learner.wav")
 
-    st.audio(learner_file.name)
-    st.session_state["learner_path"] = learner_file.name
+# ---------- 분석 ----------
+if st.button("파동 분석"):
+    y_n, sr = librosa.load("native.wav", sr=None)
+    y_l, _ = librosa.load("learner.wav", sr=sr)
 
-# ---------- Comparison ----------
-if "tts_path" in st.session_state and "learner_path" in st.session_state:
-    y_t, sr_t = librosa.load(st.session_state["tts_path"], sr=None)
-    y_l, sr_l = librosa.load(st.session_state["learner_path"], sr=None)
+    # 원어민
+    st.subheader("원어민 파동")
+    fig, ax = plt.subplots(figsize=(10, 3))
+    librosa.display.waveshow(y_n, sr=sr, ax=ax, color="#5DADE2")
+    ax.set_xticks([])
+    ax.set_yticks([])
+    st.pyplot(fig)
 
-    fig, ax = plt.subplots(figsize=(10, 4))
-    t1 = np.linspace(0, len(y_t) / sr_t, len(y_t))
-    t2 = np.linspace(0, len(y_l) / sr_l, len(y_l))
+    # 학습자
+    st.subheader("학습자 파동")
+    fig, ax = plt.subplots(figsize=(10, 3))
+    librosa.display.waveshow(y_l, sr=sr, ax=ax, color="#F5B041")
+    ax.set_xticks([])
+    ax.set_yticks([])
+    st.pyplot(fig)
 
-    ax.plot(t1, y_t, label="Native (TTS)", alpha=0.7)
-    ax.plot(t2, y_l, label="Learner", alpha=0.7)
-
-    ax.set_title("Soundwave Comparison")
+    # 겹치기
+    st.subheader("겹친 파동 (비교)")
+    fig, ax = plt.subplots(figsize=(10, 3))
+    librosa.display.waveshow(y_n, sr=sr, ax=ax, color="#5DADE2", alpha=0.7, label="Native")
+    librosa.display.waveshow(y_l, sr=sr, ax=ax, color="#F5B041", alpha=0.7, label="Learner")
     ax.legend()
+    ax.set_xticks([])
+    ax.set_yticks([])
     st.pyplot(fig)

@@ -1,36 +1,25 @@
-import librosa
+import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 
-y, sr = librosa.load("audio.wav", sr=None)
+st.set_page_config(layout="wide")
 
-# 프레임 단위 분할
-frame_length = int(0.025 * sr)
-hop_length = int(0.010 * sr)
+st.title("🎤 Formants Viewer (Demo)")
+st.write("실제 음성 없이 포먼트 분포 형태만 시각화한 예시입니다.")
 
-formants = []
+# 예시 포먼트 데이터 (Hz)
+f1 = np.array([300, 400, 500, 600, 700])
+f2 = np.array([2300, 2100, 1900, 1700, 1500])
 
-for i in range(0, len(y) - frame_length, hop_length):
-    frame = y[i:i+frame_length]
+fig, ax = plt.subplots()
+ax.scatter(f2, f1)
+ax.plot(f2, f1)
 
-    # LPC
-    lpc = librosa.lpc(frame, order=12)
-    roots = np.roots(lpc)
-    roots = roots[np.imag(roots) >= 0]
+ax.invert_xaxis()
+ax.invert_yaxis()
 
-    angles = np.angle(roots)
-    freqs = angles * (sr / (2 * np.pi))
-    freqs = np.sort(freqs)
+ax.set_xlabel("F2 (Hz)")
+ax.set_ylabel("F1 (Hz)")
+ax.set_title("Formant Curve Example")
 
-    if len(freqs) >= 2:
-        formants.append(freqs[:2])  # F1, F2
-
-formants = np.array(formants)
-
-# 시각화
-plt.plot(formants[:,0], label="F1")
-plt.plot(formants[:,1], label="F2")
-plt.ylabel("Frequency (Hz)")
-plt.xlabel("Time frame")
-plt.legend()
-plt.show()
+st.pyplot(fig)

@@ -4,3 +4,6 @@ matplotlib
 librosa
 praat-parselmouth
 scipy
+gtts
+soundfile
+streamlit-audio-recorder

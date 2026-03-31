@@ -1,18 +1,12 @@
 import streamlit as st
 
-st.set_page_config(
-    page_title="Japanese Pronunciation Apps",
-    layout="wide"
-)
+st.set_page_config(page_title="Speech Comparison App", layout="wide")
 
-st.title("🇯🇵 Japanese Pronunciation Learning Apps")
+st.title("🗣️ Pronunciation Analysis App")
 
 st.markdown("""
-왼쪽 사이드바에서 앱을 선택하세요 👈  
+왼쪽 사이드바에서 분석 도구를 선택하세요.
 
-### 포함된 앱
-- 🔊 **Sound Wave Viewer**
-- 🎤 **Formants Curve Viewer**
+- **Soundwave** : 파형 비교  
+- **Formants** : 포먼트(F1/F2) 비교
 """)
-
-st.info("이 앱은 Streamlit 멀티페이지 구조로 구성되어 있습니다.")

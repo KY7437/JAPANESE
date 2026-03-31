@@ -1,30 +1,49 @@
 import streamlit as st
-import librosa
 import numpy as np
+import librosa
 import matplotlib.pyplot as plt
+from gtts import gTTS
+import soundfile as sf
+from audio_recorder_streamlit import audio_recorder
+import tempfile
 
-st.title("🔊 Soundwave Comparison")
+st.title("🔊 Pronunciation Practice – Soundwave")
 
-native_file = st.file_uploader("원어민 발음 업로드", type=["wav"], key="native")
-learner_file = st.file_uploader("학습자 발음 업로드", type=["wav"], key="learner")
+text = st.text_input("일본어 발음 연습 문장 입력", "こんにちは")
 
-def plot_wave(y, sr, label):
-    t = np.linspace(0, len(y) / sr, len(y))
-    plt.plot(t, y, label=label, alpha=0.8)
+# ---------- TTS ----------
+if st.button("원어민 발음 생성 (TTS)"):
+    tts = gTTS(text=text, lang="ja")
+    tts_file = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+    tts.save(tts_file.name)
+    st.audio(tts_file.name)
 
-if native_file and learner_file:
-    y_n, sr_n = librosa.load(native_file, sr=None)
-    y_l, sr_l = librosa.load(learner_file, sr=None)
+    st.session_state["tts_path"] = tts_file.name
+
+# ---------- Recording ----------
+st.markdown("### 🎙️ 학습자 녹음")
+audio_bytes = audio_recorder(text="녹음 시작 / 중지")
+
+if audio_bytes:
+    learner_file = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+    with open(learner_file.name, "wb") as f:
+        f.write(audio_bytes)
+
+    st.audio(learner_file.name)
+    st.session_state["learner_path"] = learner_file.name
+
+# ---------- Comparison ----------
+if "tts_path" in st.session_state and "learner_path" in st.session_state:
+    y_t, sr_t = librosa.load(st.session_state["tts_path"], sr=None)
+    y_l, sr_l = librosa.load(st.session_state["learner_path"], sr=None)
 
     fig, ax = plt.subplots(figsize=(10, 4))
-    plot_wave(y_n, sr_n, "Native")
-    plot_wave(y_l, sr_l, "Learner")
+    t1 = np.linspace(0, len(y_t) / sr_t, len(y_t))
+    t2 = np.linspace(0, len(y_l) / sr_l, len(y_l))
 
-    ax.set_xlabel("Time (s)")
-    ax.set_ylabel("Amplitude")
-    ax.legend()
+    ax.plot(t1, y_t, label="Native (TTS)", alpha=0.7)
+    ax.plot(t2, y_l, label="Learner", alpha=0.7)
+
     ax.set_title("Soundwave Comparison")
-
+    ax.legend()
     st.pyplot(fig)
-else:
-    st.info("원어민과 학습자 음성 파일을 모두 업로드하세요.")

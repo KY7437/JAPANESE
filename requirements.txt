@@ -1,5 +1,6 @@
 streamlit
 numpy
 matplotlib
-soundfile
-gtts
+librosa
+praat-parselmouth
+scipy

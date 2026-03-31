@@ -5,5 +5,5 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🇯🇵 Japanese Pronunciation Lab")
+st.title("Japanese Pronunciation Lab")
 st.write("日本語発音の練習のためのアプリ；デモ")

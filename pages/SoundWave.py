@@ -37,13 +37,14 @@ if "tts_path" in st.session_state:
     st.subheader("📈 원어 음성 파형")
     y_native, sr_native = sf.read(st.session_state["tts_path"])
 
-    fig, ax = plt.subplots()
-    ax.plot(y_native, color="red")
+    fig, ax = plt.subplots(facecolor="#F7F7F7")
+    ax.set_facecolor("#F7F7F7")
+    ax.plot(y_native, color="#4C72B0", linewidth=1.2)
     ax.set_title("Native Speaker (TTS)")
     ax.set_xlabel("Time")
     ax.set_ylabel("Amplitude")
-    st.pyplot(fig)
 
+    st.pyplot(fig)
     st.audio(st.session_state["tts_path"])
 
 # -----------------------------
@@ -63,13 +64,14 @@ if audio_input is not None:
     y_learner, sr_learner = sf.read(learner_path)
 
     st.subheader("📉 학습자 음성 파형")
-    fig2, ax2 = plt.subplots()
-    ax2.plot(y_learner, color="blue")
+    fig2, ax2 = plt.subplots(facecolor="#F7F7F7")
+    ax2.set_facecolor("#F7F7F7")
+    ax2.plot(y_learner, color="#55A868", linewidth=1.2)
     ax2.set_title("Learner")
     ax2.set_xlabel("Time")
     ax2.set_ylabel("Amplitude")
-    st.pyplot(fig2)
 
+    st.pyplot(fig2)
     st.audio(learner_path)
 
     # -----------------------------
@@ -87,9 +89,23 @@ if audio_input is not None:
         y_n = y_n / np.max(np.abs(y_n))
         y_l = y_l / np.max(np.abs(y_l))
 
-        fig3, ax3 = plt.subplots()
-        ax3.plot(y_n, label="Native (TTS)", alpha=0.7, color="red")
-        ax3.plot(y_l, label="Learner", alpha=0.7, color="blue")
+        fig3, ax3 = plt.subplots(facecolor="#F7F7F7")
+        ax3.set_facecolor("#F7F7F7")
+
+        ax3.plot(
+            y_n,
+            label="Native (TTS)",
+            color="#4C72B0",
+            alpha=0.75,
+            linewidth=1.2
+        )
+        ax3.plot(
+            y_l,
+            label="Learner",
+            color="#DD8452",
+            alpha=0.75,
+            linewidth=1.2
+        )
 
         ax3.set_title("Overlaid Waveform Comparison")
         ax3.set_xlabel("Time")

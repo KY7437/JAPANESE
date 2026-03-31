@@ -1,7 +1,8 @@
 streamlit
 numpy
-matplotlib
 scipy
-gtts
+librosa
 soundfile
-streamlit-audio-recorder
+matplotlib
+praat-parselmouth
+TTS

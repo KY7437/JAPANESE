@@ -6,4 +6,4 @@ st.set_page_config(
 )
 
 st.title("🇯🇵 Japanese Pronunciation Lab")
-st.write("사이드바에서 **SoundWaves** 또는 **Formants**를 선택하세요.")
+st.write("日本語発音の練習のためのアプリ；デモ")

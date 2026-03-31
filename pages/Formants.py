@@ -1,56 +1,55 @@
 import streamlit as st
+import parselmouth
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import spectrogram
-from gtts import gTTS
-from audio_recorder_streamlit import audio_recorder
-import soundfile as sf
-import tempfile
 
-st.title("🎯 Pronunciation Practice – Spectral Shape")
+from utils.tts import generate_tts
 
-text = st.text_input("일본어 발음 연습 문장 입력", "こんにちは")
+st.header("📊 Formants")
 
-# ---------- TTS ----------
-if st.button("원어민 발음 생성 (TTS)"):
-    tts = gTTS(text=text, lang="ja")
-    tts_file = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
-    tts.save(tts_file.name)
-    st.audio(tts_file.name)
-    st.session_state["tts_path"] = tts_file.name
+# ---------- 입력 ----------
+text = st.text_input("일본어 단어 또는 문장")
 
-# ---------- Recording ----------
-st.markdown("### 🎙️ 학습자 녹음")
-audio_bytes = audio_recorder(text="녹음 시작 / 중지")
+if st.button("원어민 음성 생성"):
+    generate_tts(text, "native.wav")
+    st.audio("native.wav")
 
-if audio_bytes:
-    learner_file = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
-    with open(learner_file.name, "wb") as f:
-        f.write(audio_bytes)
+# ---------- 학습자 녹음 ----------
+audio = st.audio_input("같이 읽어보세요")
 
-    st.audio(learner_file.name)
-    st.session_state["learner_path"] = learner_file.name
+if audio:
+    with open("learner.wav", "wb") as f:
+        f.write(audio.getbuffer())
+    st.audio("learner.wav")
 
-# ---------- Spectral Curve ----------
-def spectral_curve(path):
-    y, sr = sf.read(path)
-    f, t, Sxx = spectrogram(y, sr)
-    curve = np.mean(Sxx, axis=1)
-    return f, curve
+# ---------- Formant 함수 ----------
+def extract_formants(wav):
+    snd = parselmouth.Sound(wav)
+    formant = snd.to_formant_burg()
 
-# ---------- Comparison ----------
-if "tts_path" in st.session_state and "learner_path" in st.session_state:
-    f_t, c_t = spectral_curve(st.session_state["tts_path"])
-    f_l, c_l = spectral_curve(st.session_state["learner_path"])
+    times = np.arange(0, snd.duration, 0.01)
+    f1, f2, f3 = [], [], []
 
-    fig, ax = plt.subplots(figsize=(7, 4))
-    ax.plot(f_t, c_t, label="Native (TTS)")
-    ax.plot(f_l, c_l, label="Learner")
+    for t in times:
+        f1.append(formant.get_value_at_time(1, t))
+        f2.append(formant.get_value_at_time(2, t))
+        f3.append(formant.get_value_at_time(3, t))
 
-    ax.set_xlim(0, 4000)
-    ax.set_xlabel("Frequency (Hz)")
-    ax.set_ylabel("Energy")
+    return times, f1, f2, f3
+
+# ---------- 분석 ----------
+if st.button("Formants 비교"):
+    tn, f1n, f2n, f3n = extract_formants("native.wav")
+    tl, f1l, f2l, f3l = extract_formants("learner.wav")
+
+    fig, ax = plt.subplots(figsize=(10, 4))
+
+    ax.plot(tn, f2n, color="#5DADE2", label="Native F2")
+    ax.plot(tl, f2l, color="#F5B041", label="Learner F2", alpha=0.8)
+
+    ax.set_title("F2 Comparison (혀 위치 차이)")
+    ax.set_xlabel("Time (s)")
+    ax.set_ylabel("Frequency (Hz)")
     ax.legend()
-    ax.set_title("Spectral Shape Comparison")
 
     st.pyplot(fig)
